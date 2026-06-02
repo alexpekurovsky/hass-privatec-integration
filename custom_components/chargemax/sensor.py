@@ -297,6 +297,7 @@ class ChargeMaxTotalEnergySensor(ChargeMaxEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_suggested_display_precision = 3
 
     def __init__(self, coordinator, device_sn, device_info):
         """Initialize the sensor."""
@@ -309,6 +310,13 @@ class ChargeMaxTotalEnergySensor(ChargeMaxEntity, SensorEntity):
         """Return the state."""
         statistics = self.coordinator.data.get("statistics", {})
         return statistics.get("totalElec", 0)
+
+    @property
+    def extra_state_attributes(self):
+        """Return extra attributes."""
+        return {
+            "last_reset": None,  # Never resets - lifetime counter
+        }
 
 
 class ChargeMaxTotalSessionsSensor(ChargeMaxEntity, SensorEntity):

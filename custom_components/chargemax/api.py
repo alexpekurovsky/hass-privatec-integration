@@ -224,10 +224,42 @@ class ChargeMaxAPI:
             "/user/order/list", data, use_api_v2=True
         )
 
-    async def async_get_order_statistics(self) -> dict[str, Any]:
-        """Get order statistics."""
+    async def async_get_order_statistics(
+        self,
+        evse_id: str | None = None,
+        user_id: str | None = None,
+        start_time: str | None = None,
+        stop_time: str | None = None,
+        grain: int = 30,
+    ) -> dict[str, Any]:
+        """Get order statistics.
+
+        Args:
+            evse_id: Device ID to filter by
+            user_id: User ID
+            start_time: Start datetime in format "YYYY-MM-DD HH:mm:ss"
+            stop_time: Stop datetime in format "YYYY-MM-DD HH:mm:ss"
+            grain: Granularity (30 = monthly statistics)
+
+        Returns monthly statistics if start_time/stop_time provided,
+        otherwise returns total statistics.
+        """
+        data: dict[str, Any] = {}
+
+        if start_time and stop_time:
+            # Request detailed statistics with date range
+            data = {
+                "grain": grain,
+                "startTime": start_time,
+                "stopTime": stop_time,
+            }
+            if evse_id:
+                data["evseId"] = evse_id
+            if user_id:
+                data["userId"] = user_id
+
         return await self._make_authenticated_request(
-            "/user/order/statistics", {}, use_api_v2=True
+            "/user/order/statistics", data, use_api_v2=True
         )
 
     async def async_get_work_mode(self, sn: str) -> dict[str, Any]:

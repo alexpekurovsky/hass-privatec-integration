@@ -1,5 +1,20 @@
 # Services for ChargeMAX integration
 
+import_history:
+  name: Import charging history
+  description: Import historical charging sessions into Home Assistant statistics for Energy dashboard
+  target:
+    device:
+      integration: chargemax
+  fields:
+    device_id:
+      name: Device
+      description: ChargeMAX device to import history for
+      required: true
+      selector:
+        device:
+          integration: chargemax
+
 start_charging:
   name: Start charging
   description: Start a charging session

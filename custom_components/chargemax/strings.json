@@ -20,6 +20,12 @@
       "already_configured": "This account is already configured"
     }
   },
+  "services": {
+    "import_history": {
+      "name": "Import charging history",
+      "description": "Import historical charging sessions into Home Assistant statistics for Energy dashboard"
+    }
+  },
   "entity": {
     "sensor": {
       "charging_power": {
