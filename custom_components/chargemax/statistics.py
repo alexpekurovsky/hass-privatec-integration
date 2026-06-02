@@ -222,17 +222,20 @@ async def async_import_charging_history(
             start=hour_data["datetime"],
             sum=cumulative_sum,
             state=hour_data["energy"],  # Energy for this hour
+            mean=None,  # We don't track mean values
         )
         statistics.append(stat)
 
     # Import statistics
     _LOGGER.info("Importing %d charging sessions into statistics", len(statistics))
-    async_add_external_statistics(hass, metadata, statistics, mean_type=None)
+    await get_instance(hass).async_add_executor_job(
+        async_add_external_statistics, hass, metadata, statistics
+    )
 
     # Calculate summary
     total_energy_imported = sum(s["energy"] for s in new_sessions)
-    earliest = new_sessions[0]["datetime"]
-    latest = new_sessions[-1]["datetime"]
+    earliest = new_sessions[0]["start_dt"]
+    latest = new_sessions[-1]["stop_dt"]
 
     result = {
         "sessions_imported": len(statistics),

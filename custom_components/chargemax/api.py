@@ -78,7 +78,7 @@ class ChargeMaxAPI:
 
         try:
             async with self.session.post(
-                url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+                url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=30)
             ) as response:
                 if response.status != 200:
                     raise ChargeMaxConnectionError(f"HTTP {response.status}")
@@ -129,7 +129,7 @@ class ChargeMaxAPI:
                     url,
                     json=data if data else {},
                     headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=10),
+                    timeout=aiohttp.ClientTimeout(total=30),
                 ) as response:
                     if response.status == 401:
                         raise ChargeMaxAuthError("Token expired or invalid")
@@ -169,7 +169,7 @@ class ChargeMaxAPI:
 
         try:
             async with self.session.post(
-                url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+                url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=30)
             ) as response:
                 if response.status == 401:
                     raise ChargeMaxAuthError("Token expired or invalid")
