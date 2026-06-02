@@ -135,6 +135,27 @@ async def async_import_charging_history(
 
     _LOGGER.info("Found %d new sessions to import", len(new_sessions))
 
+    # Group sessions by hour (since HA statistics requires hourly timestamps)
+    hourly_sessions = {}
+    for session in new_sessions:
+        # Round to the hour
+        hour_key = session["datetime"].replace(minute=0, second=0, microsecond=0)
+
+        if hour_key not in hourly_sessions:
+            hourly_sessions[hour_key] = {
+                "datetime": hour_key,
+                "energy": 0,
+                "count": 0,
+            }
+
+        hourly_sessions[hour_key]["energy"] += session["energy"]
+        hourly_sessions[hour_key]["count"] += 1
+
+    # Convert to sorted list
+    hourly_data = sorted(hourly_sessions.values(), key=lambda x: x["datetime"])
+
+    _LOGGER.info("Aggregated into %d hourly data points", len(hourly_data))
+
     # Create statistics metadata
     metadata = StatisticMetaData(
         has_mean=False,
@@ -149,14 +170,14 @@ async def async_import_charging_history(
     statistics = []
     cumulative_sum = last_sum  # Start from last known value
 
-    for session in new_sessions:
-        cumulative_sum += session["energy"]
+    for hour_data in hourly_data:
+        cumulative_sum += hour_data["energy"]
 
         # Create statistic data point
         stat = StatisticData(
-            start=session["datetime"],
+            start=hour_data["datetime"],
             sum=cumulative_sum,
-            state=session["energy"],  # Individual session energy
+            state=hour_data["energy"],  # Energy for this hour
         )
         statistics.append(stat)
 
