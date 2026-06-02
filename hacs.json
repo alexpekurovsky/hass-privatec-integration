@@ -1,0 +1,9 @@
+{
+  "name": "ChargeMAX EV Charger",
+  "content_in_root": false,
+  "filename": "chargemax",
+  "render_readme": true,
+  "domains": ["chargemax"],
+  "iot_class": "Cloud Polling",
+  "homeassistant": "2023.1.0"
+}
