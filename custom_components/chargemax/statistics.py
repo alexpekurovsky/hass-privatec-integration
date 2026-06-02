@@ -17,10 +17,15 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Storage for tracking last imported timestamps
+STORAGE_KEY = f"{DOMAIN}.statistics"
+STORAGE_VERSION = 1
 
 
 async def async_import_charging_history(
@@ -44,8 +49,9 @@ async def async_import_charging_history(
     # Get the unique statistic ID for this device
     statistic_id = f"{DOMAIN}:{device_sn}_total_energy"
 
-    # Get the entity ID for storing/retrieving last import timestamp
-    entity_id = f"sensor.{DOMAIN}_{device_sn}_total_energy"
+    # Load storage for last imported timestamps
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    storage_data = await store.async_load() or {}
 
     # Check if we have existing statistics
     last_stats = await get_instance(hass).async_add_executor_job(
@@ -57,16 +63,15 @@ async def async_import_charging_history(
         {"sum"},
     )
 
-    # Get the last imported session stop time from entity attributes
+    # Get the last imported session stop time from storage
     last_timestamp = None
     last_sum = 0
 
-    entity_state = hass.states.get(entity_id)
-    if entity_state and entity_state.attributes.get("last_imported_session_stop"):
-        # Use the stored last session stop time
-        last_timestamp_str = entity_state.attributes["last_imported_session_stop"]
-        last_timestamp = datetime.fromisoformat(last_timestamp_str)
-        _LOGGER.info("Found last imported session stop time: %s", last_timestamp)
+    if device_sn in storage_data:
+        last_timestamp_str = storage_data[device_sn].get("last_imported_session_stop")
+        if last_timestamp_str:
+            last_timestamp = datetime.fromisoformat(last_timestamp_str)
+            _LOGGER.info("Found last imported session stop time: %s", last_timestamp)
 
     if statistic_id in last_stats:
         last_stat = last_stats[statistic_id][0]
@@ -255,15 +260,11 @@ async def async_import_charging_history(
     earliest = new_sessions[0]["start_dt"]
     latest = new_sessions[-1]["stop_dt"]
 
-    # Store the last imported session stop time in entity attributes
-    hass.states.async_set(
-        entity_id,
-        hass.states.get(entity_id).state if hass.states.get(entity_id) else "unknown",
-        attributes={
-            **(hass.states.get(entity_id).attributes if hass.states.get(entity_id) else {}),
-            "last_imported_session_stop": latest.isoformat(),
-        }
-    )
+    # Store the last imported session stop time in storage
+    storage_data[device_sn] = {
+        "last_imported_session_stop": latest.isoformat(),
+    }
+    await store.async_save(storage_data)
     _LOGGER.info("Stored last imported session stop time: %s", latest)
 
     result = {
