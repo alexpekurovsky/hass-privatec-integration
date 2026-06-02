@@ -13,18 +13,22 @@ The ChargeMAX integration **automatically imports your charging history**:
 
 ### What Gets Imported
 
-Each charging session is imported and aggregated by hour:
+Each charging session is distributed proportionally across hours:
 
+- Energy is spread based on actual charging time in each hour
+- Example: 10:30-13:30 charging 3 kWh:
+  - 10:00 hour → 0.5 kWh (30 min of 60)
+  - 11:00 hour → 1.0 kWh (full hour)
+  - 12:00 hour → 1.0 kWh (full hour)
+  - 13:00 hour → 0.5 kWh (30 min of 60)
 - Multiple sessions in the same hour are combined
-- Timestamps rounded to the hour (Home Assistant requirement)
 - Energy totals preserved exactly
-- Cumulative sum calculated automatically
 
-This gives you **hourly granularity** in the Energy dashboard:
+This gives you **accurate hourly granularity** in the Energy dashboard:
 
-- View daily totals
-- See hourly charging patterns
-- Track cumulative energy over time
+- View realistic hourly consumption patterns
+- See daily totals with correct distribution
+- Track energy usage across time accurately
 
 ## Step 1: Add to Energy Dashboard
 

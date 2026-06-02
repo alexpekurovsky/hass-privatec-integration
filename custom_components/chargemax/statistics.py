@@ -1,7 +1,7 @@
 """Statistics import for ChargeMAX integration."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 from typing import Any
 
@@ -86,25 +86,33 @@ async def async_import_charging_history(
         for record in records:
             evse_order = record.get("evseOrder", {})
 
-            # Get session start time (in seconds, not milliseconds)
+            # Get both start and end times for proportional distribution
             start_time = int(evse_order.get("chargeStartTime", 0))
-            if start_time == 0:
+            stop_time = int(evse_order.get("chargeStopTime", 0))
+
+            if start_time == 0 or stop_time == 0:
                 continue
 
-            session_dt = datetime.fromtimestamp(start_time, tz=timezone.utc)
+            start_dt = datetime.fromtimestamp(start_time, tz=timezone.utc)
+            stop_dt = datetime.fromtimestamp(stop_time, tz=timezone.utc)
 
-            # Early stop: if this session is older than our last import, we're done!
-            if last_timestamp and session_dt <= last_timestamp:
-                _LOGGER.debug("Hit already-imported session at %s, stopping early", session_dt)
+            # Early stop: if this session ended before our last import, we're done!
+            if last_timestamp and stop_dt <= last_timestamp:
+                _LOGGER.debug("Hit already-imported session at %s, stopping early", stop_dt)
                 stopped_early = True
                 break
 
-            # This is a new session, add it to import list
+            # Get total energy for this session
             energy_kwh = evse_order.get("totalElectricity", 0)
+
+            if energy_kwh <= 0:
+                continue
 
             new_sessions.append({
                 "start_time": start_time,
-                "datetime": session_dt,
+                "stop_time": stop_time,
+                "start_dt": start_dt,
+                "stop_dt": stop_dt,
                 "energy": energy_kwh,
             })
 
@@ -131,30 +139,66 @@ async def async_import_charging_history(
         }
 
     # Sort sessions by time (oldest first) for proper statistics
-    new_sessions.sort(key=lambda s: s["start_time"])
+    new_sessions.sort(key=lambda s: s["stop_time"])
 
     _LOGGER.info("Found %d new sessions to import", len(new_sessions))
 
-    # Group sessions by hour (since HA statistics requires hourly timestamps)
+    # Distribute energy proportionally across hours for each session
     hourly_sessions = {}
+
     for session in new_sessions:
-        # Round to the hour
-        hour_key = session["datetime"].replace(minute=0, second=0, microsecond=0)
+        start_dt = session["start_dt"]
+        stop_dt = session["stop_dt"]
+        total_energy = session["energy"]
 
-        if hour_key not in hourly_sessions:
-            hourly_sessions[hour_key] = {
-                "datetime": hour_key,
-                "energy": 0,
-                "count": 0,
-            }
+        # Calculate total duration in seconds
+        duration_seconds = (stop_dt - start_dt).total_seconds()
 
-        hourly_sessions[hour_key]["energy"] += session["energy"]
-        hourly_sessions[hour_key]["count"] += 1
+        if duration_seconds <= 0:
+            _LOGGER.warning("Session has invalid duration, skipping")
+            continue
+
+        # Energy consumption rate (kWh per second)
+        energy_rate = total_energy / duration_seconds
+
+        # Round start time to current hour, round end to next hour
+        current_hour = start_dt.replace(minute=0, second=0, microsecond=0)
+        end_hour = stop_dt.replace(minute=0, second=0, microsecond=0)
+
+        # If session ended within the same minute as hour boundary, include that hour
+        if stop_dt.minute > 0 or stop_dt.second > 0:
+            end_hour = end_hour + timedelta(hours=1)
+
+        # Distribute energy across all hours
+        while current_hour < end_hour:
+            # Calculate the portion of this hour that was used for charging
+            hour_start = max(start_dt, current_hour)
+            hour_end = min(stop_dt, current_hour + timedelta(hours=1))
+
+            # Calculate seconds of charging in this hour
+            charging_seconds = (hour_end - hour_start).total_seconds()
+
+            # Calculate energy for this hour
+            hour_energy = energy_rate * charging_seconds
+
+            # Add to hourly totals
+            if current_hour not in hourly_sessions:
+                hourly_sessions[current_hour] = {
+                    "datetime": current_hour,
+                    "energy": 0,
+                    "count": 0,
+                }
+
+            hourly_sessions[current_hour]["energy"] += hour_energy
+            hourly_sessions[current_hour]["count"] += 1
+
+            # Move to next hour
+            current_hour += timedelta(hours=1)
 
     # Convert to sorted list
     hourly_data = sorted(hourly_sessions.values(), key=lambda x: x["datetime"])
 
-    _LOGGER.info("Aggregated into %d hourly data points", len(hourly_data))
+    _LOGGER.info("Distributed into %d hourly data points", len(hourly_data))
 
     # Create statistics metadata
     metadata = StatisticMetaData(
@@ -183,7 +227,7 @@ async def async_import_charging_history(
 
     # Import statistics
     _LOGGER.info("Importing %d charging sessions into statistics", len(statistics))
-    async_add_external_statistics(hass, metadata, statistics)
+    async_add_external_statistics(hass, metadata, statistics, mean_type=None)
 
     # Calculate summary
     total_energy_imported = sum(s["energy"] for s in new_sessions)
