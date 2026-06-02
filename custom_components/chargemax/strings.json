@@ -1,0 +1,145 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ChargeMAX Setup",
+        "description": "Enter your ChargeMAX account credentials",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email or password",
+      "cannot_connect": "Cannot connect to ChargeMAX servers",
+      "no_devices": "No charging stations found in your account",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This account is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage L3"
+      },
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "idle": "Idle",
+          "connected": "Connected",
+          "charging": "Charging",
+          "completed": "Completed",
+          "paused": "Paused",
+          "reserved": "Reserved",
+          "unavailable": "Unavailable",
+          "fault": "Fault"
+        }
+      },
+      "charging_duration": {
+        "name": "Charging duration"
+      },
+      "soc": {
+        "name": "State of charge"
+      },
+      "current_setting": {
+        "name": "Current setting"
+      },
+      "last_activity": {
+        "name": "Last activity"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      },
+      "total_sessions": {
+        "name": "Total sessions"
+      },
+      "total_time": {
+        "name": "Total charging time"
+      },
+      "work_mode_sensor": {
+        "name": "Work mode",
+        "state": {
+          "smart": "Smart",
+          "fast": "Fast",
+          "eco": "Eco",
+          "solar": "Solar",
+          "scheduled": "Scheduled"
+        }
+      },
+      "firmware": {
+        "name": "Firmware version"
+      },
+      "ip_address": {
+        "name": "IP address"
+      }
+    },
+    "binary_sensor": {
+      "connection": {
+        "name": "Connection"
+      },
+      "cable": {
+        "name": "Cable connected"
+      },
+      "fault": {
+        "name": "Fault"
+      },
+      "charging_active": {
+        "name": "Charging active"
+      }
+    },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      }
+    },
+    "number": {
+      "current_limit": {
+        "name": "Current limit"
+      }
+    },
+    "select": {
+      "work_mode": {
+        "name": "Work mode",
+        "state": {
+          "smart": "Smart",
+          "fast": "Fast",
+          "eco": "Eco",
+          "solar": "Solar",
+          "scheduled": "Scheduled"
+        }
+      }
+    },
+    "button": {
+      "reboot": {
+        "name": "Reboot"
+      },
+      "reset": {
+        "name": "Factory reset"
+      }
+    }
+  }
+}

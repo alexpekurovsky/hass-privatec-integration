@@ -1,0 +1,83 @@
+# Services for ChargeMAX integration
+
+start_charging:
+  name: Start charging
+  description: Start a charging session
+  target:
+    device:
+      integration: chargemax
+  fields:
+    device_id:
+      name: Device
+      description: ChargeMAX device to start charging
+      required: true
+      selector:
+        device:
+          integration: chargemax
+
+stop_charging:
+  name: Stop charging
+  description: Stop the current charging session
+  target:
+    device:
+      integration: chargemax
+  fields:
+    device_id:
+      name: Device
+      description: ChargeMAX device to stop charging
+      required: true
+      selector:
+        device:
+          integration: chargemax
+
+set_current_limit:
+  name: Set current limit
+  description: Set the charging current limit
+  target:
+    device:
+      integration: chargemax
+  fields:
+    device_id:
+      name: Device
+      description: ChargeMAX device
+      required: true
+      selector:
+        device:
+          integration: chargemax
+    current:
+      name: Current
+      description: Current limit in amperes (A)
+      required: true
+      selector:
+        number:
+          min: 8
+          max: 32
+          step: 1
+          unit_of_measurement: "A"
+
+set_work_mode:
+  name: Set work mode
+  description: Change the work mode
+  target:
+    device:
+      integration: chargemax
+  fields:
+    device_id:
+      name: Device
+      description: ChargeMAX device
+      required: true
+      selector:
+        device:
+          integration: chargemax
+    mode:
+      name: Mode
+      description: Work mode to set
+      required: true
+      selector:
+        select:
+          options:
+            - "smart"
+            - "fast"
+            - "eco"
+            - "solar"
+            - "scheduled"
