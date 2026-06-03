@@ -116,7 +116,9 @@ class ChargeMaxPowerSensor(ChargeMaxEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        return self.coordinator.data.get("charging_power", 0)
+        # Power is in 0.1W units (e.g., 34200 = 3420.0W)
+        power = self.coordinator.data.get("charging_power", 0)
+        return round(power / 10, 1) if power else 0
 
 
 class ChargeMaxVoltageSensor(ChargeMaxEntity, SensorEntity):
