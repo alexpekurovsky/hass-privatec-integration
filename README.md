@@ -75,7 +75,7 @@ For each charging station, the following entities are created:
 - `sensor.chargemax_SERIAL_current_l1/l2/l3` - Phase currents (A)
 - `sensor.chargemax_SERIAL_session_energy` - Energy in current session (kWh)
 - `sensor.chargemax_SERIAL_status` - Charging status
-- `sensor.chargemax_SERIAL_charging_duration` - Duration of current session (s)
+- `sensor.chargemax_SERIAL_charging_duration` - Duration of current session (min)
 - `sensor.chargemax_SERIAL_soc` - State of charge (%)
 - `sensor.chargemax_SERIAL_current_setting` - Current limit setting (A)
 - `sensor.chargemax_SERIAL_last_activity` - Last activity timestamp
