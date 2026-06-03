@@ -75,7 +75,6 @@ async def async_setup_entry(
                 ChargeMaxChargingDurationSensor(realtime_coordinator, device_sn, device_info),
                 ChargeMaxSOCSensor(realtime_coordinator, device_sn, device_info),
                 ChargeMaxCurrentSettingSensor(realtime_coordinator, device_sn, device_info),
-                ChargeMaxLastActivitySensor(realtime_coordinator, device_sn, device_info),
             ]
         )
 
@@ -85,6 +84,7 @@ async def async_setup_entry(
                 ChargeMaxTotalEnergySensor(medium_coordinator, device_sn, device_info),
                 ChargeMaxTotalSessionsSensor(medium_coordinator, device_sn, device_info),
                 ChargeMaxTotalTimeSensor(medium_coordinator, device_sn, device_info),
+                ChargeMaxLastActivitySensor(medium_coordinator, device_sn, device_info),
             ]
         )
 
@@ -184,7 +184,8 @@ class ChargeMaxSessionEnergySensor(ChargeMaxEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
         # Energy is in Wh, convert to kWh
-        energy_wh = self.coordinator.data.get("ele_quantity", 0)
+        # API field is "charged_electricity" not "ele_quantity"
+        energy_wh = self.coordinator.data.get("charged_electricity", 0)
         return round(energy_wh / 1000, 3) if energy_wh else 0
 
 
@@ -242,15 +243,16 @@ class ChargeMaxSOCSensor(ChargeMaxEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        return self.coordinator.data.get("battery_soc", 0)
+        # API field is "soc" not "battery_soc"
+        return self.coordinator.data.get("soc", 0)
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        # Only available if battery_soc is present and > 0
+        # Only available if soc is present and > 0
         return (
             super().available
-            and self.coordinator.data.get("battery_soc", 0) > 0
+            and self.coordinator.data.get("soc", 0) > 0
         )
 
 
@@ -287,9 +289,12 @@ class ChargeMaxLastActivitySensor(ChargeMaxEntity, SensorEntity):
     @property
     def native_value(self) -> datetime | None:
         """Return the state."""
-        timestamp = self.coordinator.data.get("timestamp", 0)
+        # Get from device_info (from devices list API)
+        device_info = self.coordinator.data.get("device_info", {})
+        timestamp = device_info.get("lastActivityTime", 0)
         if timestamp:
-            return datetime.fromtimestamp(timestamp / 1000)  # Convert ms to seconds
+            # Timestamp is already in seconds, not milliseconds
+            return datetime.fromtimestamp(timestamp)
         return None
 
 
@@ -311,7 +316,11 @@ class ChargeMaxTotalEnergySensor(ChargeMaxEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
         statistics = self.coordinator.data.get("statistics", {})
-        return statistics.get("totalElec", 0)
+        # API returns Statistics array, get first element
+        stats_list = statistics.get("Statistics", [])
+        if stats_list and len(stats_list) > 0:
+            return stats_list[0].get("totalElec", 0)
+        return 0
 
     @property
     def extra_state_attributes(self):
@@ -337,7 +346,11 @@ class ChargeMaxTotalSessionsSensor(ChargeMaxEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
         statistics = self.coordinator.data.get("statistics", {})
-        return statistics.get("totalOrderNum", 0)
+        # API returns Statistics array, get first element
+        stats_list = statistics.get("Statistics", [])
+        if stats_list and len(stats_list) > 0:
+            return stats_list[0].get("totalOrderNum", 0)
+        return 0
 
 
 class ChargeMaxTotalTimeSensor(ChargeMaxEntity, SensorEntity):
@@ -357,8 +370,13 @@ class ChargeMaxTotalTimeSensor(ChargeMaxEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
         statistics = self.coordinator.data.get("statistics", {})
-        total_seconds = int(statistics.get("totalChargingTime", 0))
-        return round(total_seconds / 3600, 1) if total_seconds else 0
+        # API returns Statistics array, get first element
+        stats_list = statistics.get("Statistics", [])
+        if stats_list and len(stats_list) > 0:
+            # totalChargingTime is a string in seconds
+            total_seconds = int(stats_list[0].get("totalChargingTime", "0"))
+            return round(total_seconds / 3600, 1) if total_seconds else 0
+        return 0
 
 
 class ChargeMaxWorkModeSensor(ChargeMaxEntity, SensorEntity):
@@ -416,4 +434,5 @@ class ChargeMaxIPAddressSensor(ChargeMaxEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
         device_info = self.coordinator.data.get("device_info", {})
-        return device_info.get("ip", "Unknown")
+        # API field is "accessIP" not "ip"
+        return device_info.get("accessIP", "Unknown")
