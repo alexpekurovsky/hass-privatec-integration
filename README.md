@@ -69,7 +69,7 @@ All devices in your ChargeMAX account will be automatically discovered and added
 
 For each charging station, the following entities are created:
 
-### Sensors (19)
+### Sensors (18)
 - `sensor.chargemax_SERIAL_power` - Current charging power (W)
 - `sensor.chargemax_SERIAL_voltage_l1/l2/l3` - Phase voltages (V)
 - `sensor.chargemax_SERIAL_current_l1/l2/l3` - Phase currents (A)
@@ -84,7 +84,6 @@ For each charging station, the following entities are created:
 - `sensor.chargemax_SERIAL_total_time` - Lifetime charging time (hours)
 - `sensor.chargemax_SERIAL_work_mode_sensor` - Current work mode
 - `sensor.chargemax_SERIAL_firmware` - Firmware version
-- `sensor.chargemax_SERIAL_ip_address` - Device IP address
 
 ### Binary Sensors (4)
 - `binary_sensor.chargemax_SERIAL_connection` - Online/offline status

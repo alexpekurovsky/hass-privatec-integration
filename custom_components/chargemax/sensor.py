@@ -93,7 +93,6 @@ async def async_setup_entry(
             [
                 ChargeMaxWorkModeSensor(slow_coordinator, device_sn, device_info),
                 ChargeMaxFirmwareSensor(slow_coordinator, device_sn, device_info),
-                ChargeMaxIPAddressSensor(slow_coordinator, device_sn, device_info),
             ]
         )
 
@@ -418,21 +417,3 @@ class ChargeMaxFirmwareSensor(ChargeMaxEntity, SensorEntity):
         if firmware > 0:
             return f"v{firmware // 1000000}.{(firmware // 1000) % 1000}.{firmware % 1000}"
         return "Unknown"
-
-
-class ChargeMaxIPAddressSensor(ChargeMaxEntity, SensorEntity):
-    """IP address sensor."""
-
-    def __init__(self, coordinator, device_sn, device_info):
-        """Initialize the sensor."""
-        super().__init__(coordinator, device_sn, device_info)
-        self._attr_unique_id = f"{device_sn}_ip_address"
-        self._attr_name = "IP address"
-        self._attr_icon = "mdi:ip-network"
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state."""
-        device_info = self.coordinator.data.get("device_info", {})
-        # API field is "accessIP" not "ip"
-        return device_info.get("accessIP", "Unknown")
