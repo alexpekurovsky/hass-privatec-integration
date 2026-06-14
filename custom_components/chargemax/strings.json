@@ -20,6 +20,19 @@
       "already_configured": "This account is already configured"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ChargeMAX Options",
+        "data": {
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "How often to poll the charger for status updates. Lower values reduce detection lag but increase API calls. Range: 5–60 seconds."
+        }
+      }
+    }
+  },
   "services": {
     "import_history": {
       "name": "Import charging history",

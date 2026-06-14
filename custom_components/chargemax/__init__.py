@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 
 from .api import ChargeMaxAPI, ChargeMaxAuthError, ChargeMaxConnectionError
-from .const import CONF_EMAIL, CONF_PASSWORD, DOMAIN
+from .const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import (
     ChargeMaxRealtimeCoordinator,
     ChargeMaxMediumCoordinator,
@@ -60,13 +60,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     # Create coordinators for each device
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinators = {}
     for device in devices["evse_infos"]:
         device_sn = device["sn"]
         device_id = device["evseId"]
 
         coordinators[device_sn] = {
-            "realtime": ChargeMaxRealtimeCoordinator(hass, api, device_sn, device_id),
+            "realtime": ChargeMaxRealtimeCoordinator(hass, api, device_sn, device_id, scan_interval),
             "medium": ChargeMaxMediumCoordinator(hass, api, device_sn, device_id),
             "slow": ChargeMaxSlowCoordinator(hass, api, device_sn, device_id),
             "device_info": device,  # Store initial device info
@@ -86,6 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Forward entry setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Reload entry when options change (e.g. scan interval)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     # Schedule initial history import for all devices (after 30s delay to not block startup)
     async def async_do_initial_import():

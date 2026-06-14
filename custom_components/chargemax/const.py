@@ -26,9 +26,12 @@ API_HEADERS: Final = {
 }
 
 # Update intervals
-UPDATE_INTERVAL_REALTIME: Final = timedelta(seconds=10)
+DEFAULT_SCAN_INTERVAL: Final = 10
 UPDATE_INTERVAL_MEDIUM: Final = timedelta(minutes=5)
 UPDATE_INTERVAL_SLOW: Final = timedelta(hours=1)
+
+# Options
+CONF_SCAN_INTERVAL: Final = "scan_interval"
 
 # Device info
 MANUFACTURER: Final = "ChargeMax"
