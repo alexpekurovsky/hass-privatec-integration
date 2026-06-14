@@ -67,16 +67,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_id = device["evseId"]
 
         coordinators[device_sn] = {
-            "realtime": ChargeMaxRealtimeCoordinator(hass, api, device_sn, device_id, entry, scan_interval),
-            "medium": ChargeMaxMediumCoordinator(hass, api, device_sn, device_id, entry),
-            "slow": ChargeMaxSlowCoordinator(hass, api, device_sn, device_id, entry),
+            "realtime": ChargeMaxRealtimeCoordinator(hass, api, device_sn, device_id, scan_interval),
+            "medium": ChargeMaxMediumCoordinator(hass, api, device_sn, device_id),
+            "slow": ChargeMaxSlowCoordinator(hass, api, device_sn, device_id),
             "device_info": device,  # Store initial device info
         }
 
         # Initial data fetch
-        await coordinators[device_sn]["realtime"].async_config_entry_first_refresh()
-        await coordinators[device_sn]["medium"].async_config_entry_first_refresh()
-        await coordinators[device_sn]["slow"].async_config_entry_first_refresh()
+        for coord_key in ("realtime", "medium", "slow"):
+            coordinator = coordinators[device_sn][coord_key]
+            await coordinator.async_refresh()
+            if not coordinator.last_update_success:
+                raise ConfigEntryNotReady(
+                    f"Failed to fetch initial data ({coord_key}) for {device_sn}: {coordinator.last_exception}"
+                )
 
     # Store coordinators and API
     hass.data.setdefault(DOMAIN, {})

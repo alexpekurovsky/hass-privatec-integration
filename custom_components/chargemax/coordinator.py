@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,7 +28,6 @@ class ChargeMaxRealtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         api: ChargeMaxAPI,
         device_sn: str,
         device_id: str,
-        config_entry: ConfigEntry,
         scan_interval: int = DEFAULT_SCAN_INTERVAL,
     ) -> None:
         """Initialize coordinator."""
@@ -42,7 +40,6 @@ class ChargeMaxRealtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name=f"{DOMAIN}_realtime_{device_sn}",
             update_interval=timedelta(seconds=scan_interval),
-            config_entry=config_entry,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -71,7 +68,6 @@ class ChargeMaxMediumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         api: ChargeMaxAPI,
         device_sn: str,
         device_id: str,
-        config_entry: ConfigEntry,
     ) -> None:
         """Initialize coordinator."""
         self.api = api
@@ -83,7 +79,6 @@ class ChargeMaxMediumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name=f"{DOMAIN}_medium_{device_sn}",
             update_interval=UPDATE_INTERVAL_MEDIUM,
-            config_entry=config_entry,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -122,7 +117,6 @@ class ChargeMaxSlowCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         api: ChargeMaxAPI,
         device_sn: str,
         device_id: str,
-        config_entry: ConfigEntry,
     ) -> None:
         """Initialize coordinator."""
         self.api = api
@@ -134,7 +128,6 @@ class ChargeMaxSlowCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name=f"{DOMAIN}_slow_{device_sn}",
             update_interval=UPDATE_INTERVAL_SLOW,
-            config_entry=config_entry,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
