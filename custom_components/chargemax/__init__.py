@@ -67,9 +67,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_id = device["evseId"]
 
         coordinators[device_sn] = {
-            "realtime": ChargeMaxRealtimeCoordinator(hass, api, device_sn, device_id, scan_interval),
-            "medium": ChargeMaxMediumCoordinator(hass, api, device_sn, device_id),
-            "slow": ChargeMaxSlowCoordinator(hass, api, device_sn, device_id),
+            "realtime": ChargeMaxRealtimeCoordinator(hass, api, device_sn, device_id, entry, scan_interval),
+            "medium": ChargeMaxMediumCoordinator(hass, api, device_sn, device_id, entry),
+            "slow": ChargeMaxSlowCoordinator(hass, api, device_sn, device_id, entry),
             "device_info": device,  # Store initial device info
         }
 
