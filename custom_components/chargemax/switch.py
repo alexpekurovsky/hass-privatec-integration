@@ -7,9 +7,10 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, CONNECTING_STATUS_MAP
 from .entity import ChargeMaxEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,18 +58,27 @@ class ChargeMaxChargingSwitch(ChargeMaxEntity, SwitchEntity):
 
     @property
     def available(self) -> bool:
-        """Return if entity is available."""
-        # Only available if cable is connected (status >= 2, excluding unavailable/fault)
+        """Return if entity is available — true whenever the charger is online."""
         if not super().available:
             return False
         status = self.coordinator.data.get("connecting_status", 1)
-        return status >= 2 and status not in [7, 8]
+        return status not in [7, 8]  # only unavailable on fault/error
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start charging."""
         try:
+            # Refresh first — MQTT may have detected cable before cloud caught up
+            await self.coordinator.async_request_refresh()
+            status = self.coordinator.data.get("connecting_status", 1)
+            if status < 2 or status in [7, 8]:
+                status_name = CONNECTING_STATUS_MAP.get(status, str(status))
+                msg = f"Cannot start charging: cable not connected (charger status: {status_name})"
+                _LOGGER.warning(msg)
+                raise HomeAssistantError(msg)
             await self._api.async_start_charging(self._device_sn)
             await self.coordinator.async_request_refresh()
+        except HomeAssistantError:
+            raise
         except Exception as err:
             _LOGGER.error("Failed to start charging: %s", err)
             raise
