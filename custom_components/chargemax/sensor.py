@@ -204,7 +204,7 @@ class ChargeMaxStatusSensor(ChargeMaxEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
         status_code = self.coordinator.data.get("connecting_status", 1)
-        return CONNECTING_STATUS_MAP.get(status_code, "unknown")
+        return CONNECTING_STATUS_MAP.get(status_code)
 
 
 class ChargeMaxChargingDurationSensor(ChargeMaxEntity, SensorEntity):
@@ -395,7 +395,7 @@ class ChargeMaxWorkModeSensor(ChargeMaxEntity, SensorEntity):
         """Return the state."""
         work_mode_data = self.coordinator.data.get("work_mode", {})
         mode_code = work_mode_data.get("work_mode", 0)
-        return WORK_MODE_MAP.get(mode_code, "unknown")
+        return WORK_MODE_MAP.get(mode_code)
 
 
 class ChargeMaxFirmwareSensor(ChargeMaxEntity, SensorEntity):
