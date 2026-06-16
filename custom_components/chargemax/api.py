@@ -266,9 +266,11 @@ class ChargeMaxAPI:
         """Get work mode."""
         return await self._make_authenticated_request("/evse/get_work_mode", {"sn": sn})
 
-    async def async_start_charging(self, sn: str) -> dict[str, Any]:
+    async def async_start_charging(self, sn: str, current: int) -> dict[str, Any]:
         """Start charging."""
-        return await self._make_authenticated_request("/evse/start", {"sn": sn})
+        return await self._make_authenticated_request(
+            "/evse/start", {"sn": sn, "charge_type": 0, "charging_current": current}
+        )
 
     async def async_stop_charging(self, sn: str) -> dict[str, Any]:
         """Stop charging."""
@@ -277,7 +279,7 @@ class ChargeMaxAPI:
     async def async_set_current(self, sn: str, current: int) -> dict[str, Any]:
         """Set charging current."""
         return await self._make_authenticated_request(
-            "/evse/set_current", {"sn": sn, "current": current}
+            "/evse/set_current", {"sn": sn, "charging_current": current}
         )
 
     async def async_set_work_mode(self, sn: str, mode: int) -> dict[str, Any]:

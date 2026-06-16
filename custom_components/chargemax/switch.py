@@ -75,7 +75,8 @@ class ChargeMaxChargingSwitch(ChargeMaxEntity, SwitchEntity):
                 msg = f"Cannot start charging: cable not connected (charger status: {status_name})"
                 _LOGGER.warning(msg)
                 raise HomeAssistantError(msg)
-            await self._api.async_start_charging(self._device_sn)
+            current = int(self.coordinator.data.get("setting_current", 16))
+            await self._api.async_start_charging(self._device_sn, current)
             await self.coordinator.async_request_refresh()
         except HomeAssistantError:
             raise
